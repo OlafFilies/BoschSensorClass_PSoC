@@ -1,0 +1,18 @@
+{
+    "name":"BoschSensorClass_PSoC",
+    "keywords":"magnetometer, gyroscope, accelerometer, bosch, sensor, psoc ai kit, infineon",
+    "description":"Arduino port for the Bosch Sensortec BMI-270 gyroscope/accelerometer and BMM-350 magnetometer used on the Infineon PSoC CY8CKIT-6552-AI ",
+    "repository":{
+       "type":"git",
+       "url":"",
+       "branch":"master"
+    },
+    "version":"0.0.1",
+    "license":"MIT",
+    "frameworks":"arduino",
+    "platforms":[
+       "infineonxmc",
+       "infineonpsoc",
+       "atmelavr"
+    ]
+ }
