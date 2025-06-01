@@ -96,15 +96,11 @@ int BoschSensorClassPSoC::begin(CfgBoshSensor_t cfg)
 
     if(cfg != BOSCH_ACCELEROMETER_ONLY) {
 
-Serial.println("BMM INI IN");
         result |= bmm350_init(&bmm350);
         bmm350_print_rslt(result);
-Serial.println(result);
 
-Serial.println("BMM CONF IN");
         result = configure_sensor(&bmm350);
         bmm350_print_rslt(result);
-Serial.println("BMM CONF OUT");
     }
 
     result = 0;
@@ -112,6 +108,19 @@ Serial.println("BMM CONF OUT");
 
     return _initialized;
 }
+
+
+
+
+
+
+/**
+ * @brief Setup for the IMU(Inertial Measurement Unit) BMI270 which can act as a 
+ * - gyroscope
+ * - accelerometer
+ */
+
+
 
 /**
  * @brief 
@@ -275,22 +284,36 @@ float BoschSensorClassPSoC::gyroscopeSampleRate() {
 
 
 
+
+
+
 /**
- * @brief 
+ * @brief Setup for the magnetic sensor BMM359
  * 
- * @return int 
  */
-int BoschSensorClassPSoC::magneticFieldAvailable() {
-    uint8_t status;
+
+
+
+/** 
+ * @brief Common initial setup running at the begin functions.
+ * 
+ * @param dev the internal pointer structure setting
+ * @return int8_t the resulting error or success code
+ */
+int8_t BoschSensorClassPSoC::configure_sensor(struct bmm350_dev *dev)
+{
     int8_t rslt;
-    //bmm350_get_interrupt_status(&status, &bmm350);
-    rslt = bmm350_get_regs(BMM350_REG_INT_STATUS, &status, 1, &bmm350);
+    rslt = bmm350_soft_reset(dev);
+    rslt = magneticSensorPreset(bmm350_data_rate, bmm350_performance );
+    if (rslt == BMM350_OK)
+    {
+        rslt = magneticPowerMode(bmm350_pwr_mode);
+        rslt = magneticInterruptMode(bmm350_interrupt);
+    }
 
-    Serial.println(status);
-    Serial.println(rslt);
-
-    return status;
+    return rslt;
 }
+
 
 /**
  * @brief 
@@ -298,7 +321,7 @@ int BoschSensorClassPSoC::magneticFieldAvailable() {
  * @param x 
  * @param y 
  * @param z 
- * @return int 
+ * @return int the resulting error or success code
  */
 int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z) {
   struct bmm350_mag_temp_data mag_data;
@@ -314,9 +337,7 @@ int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z) {
 }
 
 /**
- * @brief 
- * 
- * @param rate 
+ * @brief Setting the sample rate and accuracy/power mode for the BMM350
  * @verbatim
       Data rate (ODR)     |        odr
  -------------------------|-----------------------
@@ -330,55 +351,28 @@ int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z) {
    3.125Hz                |  BMM350_DATA_RATE_3_125HZ
    1.5625Hz               |  BMM350_DATA_RATE_1_5625HZ
  * @endverbatim
- * @return int
- */
-float BoschSensorClassPSoC::magneticFieldSampleRate(enum bmm350_data_rates rate) {
-    bmm350_data_rate = rate;
-    switch (bmm350_data_rate){
-        case BMM350_DATA_RATE_400HZ:
-            return 400;
-        case BMM350_DATA_RATE_200HZ:
-            return 200;
-        case BMM350_DATA_RATE_100HZ:
-            return 100;
-        case BMM350_DATA_RATE_50HZ:
-            return 50;
-        case BMM350_DATA_RATE_25HZ:
-            return 25;
-        case BMM350_DATA_RATE_12_5HZ:
-            return 12.5;
-        case BMM350_DATA_RATE_6_25HZ:
-            return 6.25;
-        case BMM350_DATA_RATE_3_125HZ:
-            return 3.125;
-        case BMM350_DATA_RATE_1_5625HZ:
-            return 1.5625;
-            break;
-        default:
-            return 0;
-    }
-}
-
-/**
- * @brief 
- * 
- * @param noise 
+ *
  * @verbatim
-     avg                    |   averaging factor            alias
- ---------------------------|------------------------------------------
-   low power/highest noise  |  BMM350_NO_AVERAGING  BMM350_LOWPOWER
-   lesser noise             |  BMM350_AVERAGING_2   BMM350_REGULARPOWER
-   even lesser noise        |  BMM350_AVERAGING_4   BMM350_LOWNOISE
- lowest noise/highest power |  BMM350_AVERAGING_8   BMM350_ULTRALOWNOISE
+     avg                      |   averaging factor            alias
+ -----------------------------|------------------------------------------
+   low power/highest noise    |  BMM350_NO_AVERAGING  BMM350_LOWPOWER
+   lesser noise               |  BMM350_AVERAGING_2   BMM350_REGULARPOWER
+   even lesser noise          |  BMM350_AVERAGING_4   BMM350_LOWNOISE
+   lowest noise/highest power |  BMM350_AVERAGING_8   BMM350_ULTRALOWNOISE
  * @endverbatim
+ * 
+ * @param rate 
+ * @param noise 
  
- * @return int 
+ * @return int the resulting error or success code
  */
-int BoschSensorClassPSoC::magneticPerformanceMode(enum bmm350_performance_parameters performance) {
-
+int BoschSensorClassPSoC::magneticSensorPreset(enum bmm350_data_rates rate, enum bmm350_performance_parameters performance) {
     bmm350_performance = performance;
-    return bmm350_performance;
+    bmm350_data_rate = rate;
+    return bmm350_set_odr_performance( bmm350_data_rate, bmm350_performance, &bmm350 );
 }
+
+
 
 /**
  * @brief 
@@ -392,7 +386,7 @@ int BoschSensorClassPSoC::magneticPerformanceMode(enum bmm350_performance_parame
                           |  BMM350_FORCED_MODE
                           |  BMM350_FORCED_MODE_FAST
  * @endverbatim
- * @return int 
+ * @return int the resulting error or success code
  */
 int BoschSensorClassPSoC::magneticPowerMode(enum bmm350_power_modes power){
     bmm350_pwr_mode = power;
@@ -403,7 +397,7 @@ int BoschSensorClassPSoC::magneticPowerMode(enum bmm350_power_modes power){
  * @brief 
  * 
  * @param interrupt 
- * @return int 
+ * @return int the resulting error or success code
  */
 int BoschSensorClassPSoC::magneticInterruptMode(enum bmm350_interrupt_enable_disable interrupt){
     bmm350_interrupt = interrupt;
@@ -411,38 +405,12 @@ int BoschSensorClassPSoC::magneticInterruptMode(enum bmm350_interrupt_enable_dis
 }
 
 
-/** 
- * @brief 
+
+
+/**
+ * @brief Common functions for both sensors
  * 
- * @param dev 
- * @return int8_t 
  */
-int8_t BoschSensorClassPSoC::configure_sensor(struct bmm350_dev *dev)
-{
-    int8_t rslt;
-
-    magneticFieldSampleRate(bmm350_data_rate);
-    magneticPerformanceMode(bmm350_performance);
-
-    //  set performance
-    rslt = bmm350_set_odr_performance(
-        bmm350_data_rate,
-        bmm350_performance,
-        dev
-    );
-    if (rslt == BMM350_OK)
-    {
-        rslt = magneticPowerMode(bmm350_pwr_mode);
-        rslt = magneticInterruptMode(bmm350_interrupt);
-    }
-
-
-
-    return rslt;
-}
-
-
-
 
 /**
  * @brief 
@@ -451,7 +419,7 @@ int8_t BoschSensorClassPSoC::configure_sensor(struct bmm350_dev *dev)
  * @param reg_data 
  * @param len 
  * @param intf_ptr 
- * @return int8_t 
+ * @return int8_t the resulting error or success code
  */
 int8_t BoschSensorClassPSoC::bosch_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
@@ -490,7 +458,7 @@ int8_t BoschSensorClassPSoC::bosch_i2c_read(uint8_t reg_addr, uint8_t *reg_data,
  * @param reg_data 
  * @param len 
  * @param intf_ptr 
- * @return int8_t 
+ * @return int8_t the resulting error or success code
  */
 int8_t BoschSensorClassPSoC::bosch_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
@@ -516,7 +484,7 @@ int8_t BoschSensorClassPSoC::bosch_i2c_write(uint8_t reg_addr, const uint8_t *re
 }
 
 /**
- * @brief 
+ * @brief Wrapper to the Arduino microsecond delay function
  * 
  * @param period 
  * @param intf_ptr 

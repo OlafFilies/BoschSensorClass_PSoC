@@ -51,10 +51,7 @@ class BoschSensorClassPSoC {
 
         // Magnetometer
         virtual int readMagneticField(float& x, float& y, float& z);                            // Results are in uT (micro Tesla).
-        virtual int magneticFieldAvailable();                                                   // Number of samples in the FIFO.
-        
-        virtual float magneticFieldSampleRate(enum bmm350_data_rates rate = BMM350_DATA_RATE_400HZ);                 // Sampling rate of the sensor.
-        virtual int magneticPerformanceMode(enum bmm350_performance_parameters performance = BMM350_REGULARPOWER);             //
+        virtual int magneticSensorPreset(enum bmm350_data_rates rate = BMM350_DATA_RATE_400HZ, enum bmm350_performance_parameters performance = BMM350_REGULARPOWER);
         virtual int magneticPowerMode(enum bmm350_power_modes power = BMM350_NORMAL_MODE);                          //
         virtual int magneticInterruptMode(enum bmm350_interrupt_enable_disable interrupt = BMM350_DISABLE_INTERRUPT);                      //
         
