@@ -23,4 +23,6 @@ Both sensors are attached to the internal I2C bus of the PSoC Kit, therefore:
 
 - [for the CY8CKIT-062S2-AI](https://www.infineon.com/cms/en/product/evaluation-boards/cy8ckit-062s2-ai/?redirId=273839)
 - [PSoC for Arduino](https://github.com/Infineon/arduino-core-psoc6)
-- [PSOc for Arduino documentation](https://arduino-core-psoc6.readthedocs.io/en/latest/hw-platforms.html)
+- [PSOc for Arduino documentation](https://arduino-core-psoc6.readthedocs.io/en/latest/hw-platforms.html)   
+- [Bosch BMI270](https://www.bosch-sensortec.com/products/motion-sensors/imus/bmi270/)
+- [Bosch BMM350](https://www.bosch-sensortec.com/products/motion-sensors/magnetometers/bmm350/)
