@@ -13,10 +13,10 @@
 
 
 // default range is +-2000dps, so conversion factor is (((1 << 15)/4.0f))
-#define INT16_to_G   (8192.0f)
+#define INT16_to_G      (8192.0f)
 
 // default range is +-2000dps, so conversion factor is (((1 << 15)/4.0f))
-#define INT16_to_DPS   (16.384f)
+#define INT16_to_DPS    (16.384f)
 
 
 void BoschSensorClassPSoC::debug(Stream& stream)
@@ -115,7 +115,8 @@ int BoschSensorClassPSoC::begin(CfgBoshSensor_t cfg)
  * @brief 
  * 
  */
-void BoschSensorClassPSoC::setContinuousMode() {
+void BoschSensorClassPSoC::setContinuousMode()
+{
   bmi2_set_fifo_config(BMI2_FIFO_GYR_EN | BMI2_FIFO_ACC_EN, 1, &bmi270);
   continuousMode = true;
 }
@@ -124,7 +125,8 @@ void BoschSensorClassPSoC::setContinuousMode() {
  * @brief 
  * 
  */
-void BoschSensorClassPSoC::oneShotMode() {
+void BoschSensorClassPSoC::oneShotMode()
+{
   bmi2_set_fifo_config(BMI2_FIFO_GYR_EN | BMI2_FIFO_ACC_EN, 0, &bmi270);
   continuousMode = false;
 }
@@ -189,7 +191,8 @@ int8_t BoschSensorClassPSoC::configure_sensor(struct bmi2_dev *dev)
  * @param z 
  * @return int 
  */
-int BoschSensorClassPSoC::readAcceleration(float& x, float& y, float& z) {
+int BoschSensorClassPSoC::readAcceleration(float& x, float& y, float& z)
+{
     struct bmi2_sens_data sensor_data;
     auto ret = bmi2_get_sensor_data(&sensor_data, &bmi270);
     x = sensor_data.acc.x / INT16_to_G;
@@ -217,7 +220,8 @@ int BoschSensorClassPSoC::accelerationAvailable() {
  * 
  * @return float 
  */
-float BoschSensorClassPSoC::accelerationSampleRate() {
+float BoschSensorClassPSoC::accelerationSampleRate()
+{
     struct bmi2_sens_config sens_cfg;
     sens_cfg.type = BMI2_ACCEL;
     bmi2_get_sensor_config(&sens_cfg, 1, &bmi270);
@@ -235,7 +239,8 @@ float BoschSensorClassPSoC::accelerationSampleRate() {
  * @param z 
  * @return int 
  */
-int BoschSensorClassPSoC::readGyroscope(float& x, float& y, float& z) {
+int BoschSensorClassPSoC::readGyroscope(float& x, float& y, float& z)
+{
     struct bmi2_sens_data sensor_data;
     auto ret = bmi2_get_sensor_data(&sensor_data, &bmi270);
     x = sensor_data.gyr.x / INT16_to_DPS;
@@ -249,7 +254,8 @@ int BoschSensorClassPSoC::readGyroscope(float& x, float& y, float& z) {
  * 
  * @return int 
  */
-int BoschSensorClassPSoC::gyroscopeAvailable() {
+int BoschSensorClassPSoC::gyroscopeAvailable()
+{
     uint16_t status;
     bmi2_get_int_status(&status, &bmi270);
     int ret = ((status | _int_status) & BMI2_GYR_DRDY_INT_MASK);
@@ -263,7 +269,8 @@ int BoschSensorClassPSoC::gyroscopeAvailable() {
  * 
  * @return float 
  */
-float BoschSensorClassPSoC::gyroscopeSampleRate() {
+float BoschSensorClassPSoC::gyroscopeSampleRate()
+{
     struct bmi2_sens_config sens_cfg;
     sens_cfg.type = BMI2_GYRO;
     bmi2_get_sensor_config(&sens_cfg, 1, &bmi270);
@@ -277,10 +284,10 @@ float BoschSensorClassPSoC::gyroscopeSampleRate() {
 
 
 /**
+ * ****************************************************************************
  * @brief Setup for the magnetic sensor BMM359
- * 
+ * ****************************************************************************
  */
-
 
 
 /** 
@@ -311,9 +318,10 @@ int8_t BoschSensorClassPSoC::configure_sensor(struct bmm350_dev *dev)
  * @param z compensated z value of the magnetic field in µT
  * @return int the resulting error or success code
  */
-int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z) {
+int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z)
+{
     float t;
-    readMagneticField(x, y, z, t);
+    return readMagneticField(x, y, z, t);
 }
 
 /**
@@ -325,7 +333,8 @@ int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z) {
  * @param t compensated temperature value of the sensor
  * @return int the resulting error or success code
  */
-int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z, float& t) {
+int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z, float& t)
+{
     struct bmm350_mag_temp_data mag_data;
     int rslt = bmm350_get_compensated_mag_xyz_temp_data(&mag_data, &bmm350);
     x = mag_data.x;
@@ -333,6 +342,35 @@ int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z, float&
     z = mag_data.z;
     t = mag_data.temperature;
     return rslt;
+}
+
+/**
+ * @brief Calculates the magnetic field in compass degrees
+ * 
+ * @param compass compass degree based on x and y numbers
+ * @return int the resulting error or success code
+ */
+int BoschSensorClassPSoC::readCompass(float& compass)
+{
+    float x, y, z;
+    readMagneticField(x,y,z);
+    compass = atan2(y, x) * 180 / M_PI + 180;
+    return compass;
+}
+
+/**
+ * @brief Enable/disables x/y/z axes of the magnetometer. Be aware that
+ * this can only be done before starting the sensor, otherwise it will
+ * be set into suspend mode.
+ * 
+ * @param en_x enable/disable x axes
+ * @param en_y enable/disable y axes
+ * @param en_z enable/disable Z axes
+ * @return int the resulting error or success code
+ */
+int BoschSensorClassPSoC::magneticEnableAxes(enum bmm350_x_axis_en_dis en_x, enum bmm350_y_axis_en_dis en_y, enum bmm350_z_axis_en_dis en_z)
+{
+    return bmm350_enable_axes(en_x, en_y, en_z, &bmm350);
 }
 
 /**
@@ -365,7 +403,8 @@ int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z, float&
  
  * @return int the resulting error or success code
  */
-int BoschSensorClassPSoC::magneticSensorPreset(enum bmm350_data_rates rate, enum bmm350_performance_parameters performance) {
+int BoschSensorClassPSoC::magneticSensorPreset(enum bmm350_data_rates rate, enum bmm350_performance_parameters performance)
+{
     bmm350_performance = performance;
     bmm350_data_rate = rate;
     return bmm350_set_odr_performance( bmm350_data_rate, bmm350_performance, &bmm350 );
@@ -385,7 +424,8 @@ int BoschSensorClassPSoC::magneticSensorPreset(enum bmm350_data_rates rate, enum
  * @param power 
  * @return int the resulting error or success code
  */
-int BoschSensorClassPSoC::magneticPowerMode(enum bmm350_power_modes power){
+int BoschSensorClassPSoC::magneticPowerMode(enum bmm350_power_modes power)
+{
     bmm350_pwr_mode = power;
     return bmm350_set_powermode(bmm350_pwr_mode, &bmm350);
 }
@@ -396,14 +436,20 @@ int BoschSensorClassPSoC::magneticPowerMode(enum bmm350_power_modes power){
  * @param interrupt 
  * @return int the resulting error or success code
  */
-int BoschSensorClassPSoC::magneticInterruptMode(enum bmm350_interrupt_enable_disable interrupt){
+int BoschSensorClassPSoC::magneticInterruptMode(enum bmm350_interrupt_enable_disable interrupt)
+{
     bmm350_interrupt = interrupt;
     return bmm350_enable_interrupt(bmm350_interrupt, &bmm350);
 }
 
 
-
-
+/**
+ * @brief 
+ * 
+ * @param threshold 
+ * @param polarity 
+ * @return int 
+ */
 int BoschSensorClassPSoC::magneticSetThreshold(int8_t threshold, enum bmm350_intr_polarity polarity)
 {
     int rslt;
@@ -416,18 +462,73 @@ int BoschSensorClassPSoC::magneticSetThreshold(int8_t threshold, enum bmm350_int
     return rslt;
 }
 
-
-/**
- * @brief Common functions for both sensors
- * 
- */
-
 /**
  * @brief 
  * 
- * @param reg_addr 
- * @param reg_data 
- * @param len 
+ * @return bmm350_threshold_data_t 
+ */
+bmm350_threshold_data_t BoschSensorClassPSoC::magneticGetThreshold() {
+    uint8_t drdyStatus = 0x0;
+    int rslt;
+    float x, y, z;
+    bmm350_threshold_tmp.i_x = 0;
+    bmm350_threshold_tmp.i_y = 0;
+    bmm350_threshold_tmp.i_z = 0;
+    bmm350_threshold_tmp.m_x = 0;
+    bmm350_threshold_tmp.m_y = 0;
+    bmm350_threshold_tmp.m_z = 0;
+
+    bmm350_get_interrupt_status(&drdyStatus, &bmm350);
+    if (drdyStatus & 0x01)
+    {
+        rslt = readMagneticField(x,y,z);
+        if (rslt == BMM350_OK)
+        {
+            if ( (int32_t)x < (int32_t)bmm350_threshold*16 ){
+                bmm350_threshold_tmp.i_x = -1;
+                bmm350_threshold_tmp.m_x = (int32_t)x;
+            } else if ((int32_t)x > (int32_t)bmm350_threshold*16)
+            {
+                bmm350_threshold_tmp.i_x = -1;
+                bmm350_threshold_tmp.m_x = (int32_t)x;
+            }
+
+            if ( (int32_t)y < (int32_t)bmm350_threshold*16 ){
+                bmm350_threshold_tmp.i_y = -1;
+                bmm350_threshold_tmp.m_y = (int32_t)y;
+            } else if ((int32_t)y > (int32_t)bmm350_threshold*16)
+            {
+                bmm350_threshold_tmp.i_y = -1;
+                bmm350_threshold_tmp.m_y = (int32_t)y;
+            }
+
+            if ( (int32_t)z < (int32_t)bmm350_threshold*16 ){
+                bmm350_threshold_tmp.i_z = -1;
+                bmm350_threshold_tmp.m_z = (int32_t)z;
+            } else if ((int32_t)z > (int32_t)bmm350_threshold*16)
+            {
+                bmm350_threshold_tmp.i_z = -1;
+                bmm350_threshold_tmp.m_z = (int32_t)z;
+            }
+        }
+    }
+    return bmm350_threshold_tmp;
+}
+
+
+
+/**
+ * ****************************************************************************
+ * @brief Common functions for both sensors
+ * ****************************************************************************
+ */
+
+/**
+ * @brief I2C read function for both sensors
+ * 
+ * @param reg_addr register address to write
+ * @param reg_data data to write into the register
+ * @param len length of data field
  * @param intf_ptr 
  * @return int8_t the resulting error or success code
  */
@@ -462,11 +563,11 @@ int8_t BoschSensorClassPSoC::bosch_i2c_read(uint8_t reg_addr, uint8_t *reg_data,
 }
 
 /**
- * @brief 
+ * @brief I2C write function for both sensors
  * 
- * @param reg_addr 
- * @param reg_data 
- * @param len 
+ * @param reg_addr register address to write
+ * @param reg_data data to write into the register
+ * @param len length of data field
  * @param intf_ptr 
  * @return int8_t the resulting error or success code
  */
@@ -505,10 +606,14 @@ void BoschSensorClassPSoC::delay_us(uint32_t period, void *intf_ptr)
 }
 
 /**
- * @brief 
+ * @brief Function blinks the LED_BULTIN in panic mode and print outs the error code
+ * and description
  * 
+ * @param errhead Error header string
+ * @param errtext Error text string
+ * @param rslt error code
  */
-void BoschSensorClassPSoC::panic_led_trap(const char* errhead, const char* errtext,int8_t rslt)
+ void BoschSensorClassPSoC::panic_led_trap(const char* errhead, const char* errtext,int8_t rslt)
 {
     Serial.print(errhead);
     Serial.print(rslt);
@@ -529,9 +634,9 @@ void BoschSensorClassPSoC::panic_led_trap(const char* errhead, const char* errte
 }
 
 /**
- * @brief 
+ * @brief BMI270 IMU gyroscope/accelerometer error code output
  * 
- * @param rslt 
+ * @param rslt error code
  */
 void BoschSensorClassPSoC::bmi270_print_rslt(int8_t rslt)
 {
@@ -653,9 +758,9 @@ void BoschSensorClassPSoC::bmi270_print_rslt(int8_t rslt)
 }
 
 /**
- * @brief 
+ * @brief BMM350 magnetometer error codes
  * 
- * @param rslt 
+ * @param rslt error code to print out
  */
 void BoschSensorClassPSoC::bmm350_print_rslt(int8_t rslt)
 {

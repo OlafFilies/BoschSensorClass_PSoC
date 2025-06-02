@@ -11,6 +11,8 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <math.h>
+
 #include "utilities/BMI270-Sensor-API/bmi270.h"
 #include "utilities/BMM350-Sensor-API/bmm350.h"
 
@@ -25,7 +27,14 @@ struct dev_info {
   uint8_t dev_addr;
 };
 
-
+typedef struct{
+  int32_t m_x;      /* magnetic x data */
+  int32_t m_y;      /* magnetic y data */
+  int32_t m_z;      /* magnetic z data */
+  int8_t i_x;       /* x interrupt -1=low, 0 none, 1=high */ 
+  int8_t i_y;       /* y interrupt -1=low, 0 none, 1=high */ 
+  int8_t i_z;       /* z interrupt -1=low, 0 none, 1=high */ 
+} bmm350_threshold_data_t;
 
 class BoschSensorClassPSoC {
     
@@ -52,20 +61,20 @@ class BoschSensorClassPSoC {
         // Magnetometer
         virtual int readMagneticField(float& x, float& y, float& z);
         virtual int readMagneticField(float& x, float& y, float& z, float& t);
+        virtual int readCompass(float& compass);
 
         virtual int magneticSensorPreset(enum bmm350_data_rates rate = BMM350_DATA_RATE_400HZ, enum bmm350_performance_parameters performance = BMM350_REGULARPOWER);
-        virtual int magneticPowerMode(enum bmm350_power_modes power = BMM350_NORMAL_MODE);                          //
-        virtual int magneticInterruptMode(enum bmm350_interrupt_enable_disable interrupt = BMM350_DISABLE_INTERRUPT);                      //
+        virtual int magneticPowerMode(enum bmm350_power_modes power = BMM350_NORMAL_MODE);
+        virtual int magneticInterruptMode(enum bmm350_interrupt_enable_disable interrupt = BMM350_DISABLE_INTERRUPT);
+        virtual int magneticEnableAxes(enum bmm350_x_axis_en_dis en_x = BMM350_X_EN, enum bmm350_y_axis_en_dis en_y = BMM350_Y_EN, enum bmm350_z_axis_en_dis en_z = BMM350_Z_EN);
         virtual int magneticSetThreshold(int8_t threshold, enum bmm350_intr_polarity polarity);
-
+        virtual bmm350_threshold_data_t magneticGetThreshold();
 
     protected:
-        // can be modified by subclassing for finer configuration
         virtual int8_t configure_sensor(struct bmm350_dev *dev);
         virtual int8_t configure_sensor(struct bmi2_dev *dev) ;
 
     private:
-
         TwoWire* _wire;
         Stream* _debug = nullptr;
         bool _initialized = false;
@@ -90,7 +99,7 @@ class BoschSensorClassPSoC {
         enum bmm350_power_modes bmm350_pwr_mode               = BMM350_NORMAL_MODE;            /*! Preset mode of sensor */
         enum bmm350_interrupt_enable_disable bmm350_interrupt = BMM350_DISABLE_INTERRUPT;
         int8_t bmm350_threshold = 0;
-
+        bmm350_threshold_data_t bmm350_threshold_tmp;
 };
 
 
