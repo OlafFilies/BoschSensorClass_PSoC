@@ -38,7 +38,7 @@ BoschSensorClassPSoC::BoschSensorClassPSoC(TwoWire& wire)
 /**
  * @brief Begin function configures one or both sensors with default settings
  * and tries to call them on the I2C line
- * 
+ * On the PSoC AI Kit we have both sensors, the BMI270 and the BMM350
  * @verbatim
       cfg                   |
  ---------------------------|-----------------------------------------
@@ -54,6 +54,7 @@ int BoschSensorClassPSoC::begin(CfgBoshSensor_t cfg)
 {
     _wire->begin();
 
+    // BMI270 settings
     bmi270.chip_id = BMI2_I2C_PRIM_ADDR;
     bmi270.read = bosch_i2c_read;
     bmi270.write = bosch_i2c_write;
@@ -66,19 +67,13 @@ int BoschSensorClassPSoC::begin(CfgBoshSensor_t cfg)
     accel_gyro_dev_info._wire = _wire;
     accel_gyro_dev_info.dev_addr = bmi270.chip_id;
 
-
+    // BMM350 settings
     bmm350.chip_id = BMM350_I2C_ADSEL_SET_HIGH;
     bmm350.read = bosch_i2c_read;
     bmm350.write = bosch_i2c_write;
     bmm350.delay_us = delay_us;
     bmm350.intf_ptr = &mag_dev_info;
     bmm350.axis_en = BMM350_ENABLE;
-    // bmm350.intf = BMM350_INTF_RET_TYPE;
-    // mag_comp
-    // otp_data
-    // var_idm
-    // raw_override
-
 
     mag_dev_info._wire = _wire;
     mag_dev_info.dev_addr = bmm350.chip_id;
@@ -110,17 +105,11 @@ int BoschSensorClassPSoC::begin(CfgBoshSensor_t cfg)
 }
 
 
-
-
-
-
 /**
  * @brief Setup for the IMU(Inertial Measurement Unit) BMI270 which can act as a 
  * - gyroscope
  * - accelerometer
  */
-
-
 
 /**
  * @brief 
@@ -314,26 +303,36 @@ int8_t BoschSensorClassPSoC::configure_sensor(struct bmm350_dev *dev)
     return rslt;
 }
 
-
 /**
- * @brief 
+ * @brief magnetic field data
  * 
- * @param x 
- * @param y 
- * @param z 
+ * @param x compensated x value of the magnetic field in µT
+ * @param y compensated y value of the magnetic field in µT
+ * @param z compensated z value of the magnetic field in µT
  * @return int the resulting error or success code
  */
 int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z) {
-  struct bmm350_mag_temp_data mag_data;
-  int const rc = bmm350_get_compensated_mag_xyz_temp_data(&mag_data, &bmm350);
-  x = mag_data.x;
-  y = mag_data.y;
-  z = mag_data.z;
+    float t;
+    readMagneticField(x, y, z, t);
+}
 
-  if (rc == BMM350_OK)
-    return 1;
-  else
-    return 0;
+/**
+ * @brief magnetic field data and temperature
+ * 
+ * @param x compensated x value of the magnetic field in µT
+ * @param y compensated y value of the magnetic field in µT
+ * @param z compensated z value of the magnetic field in µT
+ * @param t compensated temperature value of the sensor
+ * @return int the resulting error or success code
+ */
+int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z, float& t) {
+    struct bmm350_mag_temp_data mag_data;
+    int rslt = bmm350_get_compensated_mag_xyz_temp_data(&mag_data, &bmm350);
+    x = mag_data.x;
+    y = mag_data.y;
+    z = mag_data.z;
+    t = mag_data.temperature;
+    return rslt;
 }
 
 /**
@@ -372,12 +371,8 @@ int BoschSensorClassPSoC::magneticSensorPreset(enum bmm350_data_rates rate, enum
     return bmm350_set_odr_performance( bmm350_data_rate, bmm350_performance, &bmm350 );
 }
 
-
-
 /**
- * @brief 
- * 
- * @param power
+ * @brief Set the power mode of the sensor
  * @verbatim
                 powermode |   Power mode
  -------------------------|-----------------------
@@ -386,6 +381,8 @@ int BoschSensorClassPSoC::magneticSensorPreset(enum bmm350_data_rates rate, enum
                           |  BMM350_FORCED_MODE
                           |  BMM350_FORCED_MODE_FAST
  * @endverbatim
+ * 
+ * @param power 
  * @return int the resulting error or success code
  */
 int BoschSensorClassPSoC::magneticPowerMode(enum bmm350_power_modes power){
@@ -394,7 +391,7 @@ int BoschSensorClassPSoC::magneticPowerMode(enum bmm350_power_modes power){
 }
 
 /**
- * @brief 
+ * @brief Set the interrupt mode of the sensor
  * 
  * @param interrupt 
  * @return int the resulting error or success code
@@ -405,6 +402,19 @@ int BoschSensorClassPSoC::magneticInterruptMode(enum bmm350_interrupt_enable_dis
 }
 
 
+
+
+int BoschSensorClassPSoC::magneticSetThreshold(int8_t threshold, enum bmm350_intr_polarity polarity)
+{
+    int rslt;
+    this->bmm350_threshold = threshold;
+    rslt = bmm350_configure_interrupt(BMM350_PULSED, polarity, BMM350_INTR_PUSH_PULL, BMM350_MAP_TO_PIN, &bmm350);
+    if (rslt == BMM350_OK)
+    {
+        rslt = bmm350_enable_interrupt(BMM350_ENABLE_INTERRUPT, &bmm350);
+    }
+    return rslt;
+}
 
 
 /**

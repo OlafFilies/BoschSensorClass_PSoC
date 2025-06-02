@@ -50,11 +50,14 @@ class BoschSensorClassPSoC {
         virtual float gyroscopeSampleRate(); // Sampling rate of the sensor.
 
         // Magnetometer
-        virtual int readMagneticField(float& x, float& y, float& z);                            // Results are in uT (micro Tesla).
+        virtual int readMagneticField(float& x, float& y, float& z);
+        virtual int readMagneticField(float& x, float& y, float& z, float& t);
+
         virtual int magneticSensorPreset(enum bmm350_data_rates rate = BMM350_DATA_RATE_400HZ, enum bmm350_performance_parameters performance = BMM350_REGULARPOWER);
         virtual int magneticPowerMode(enum bmm350_power_modes power = BMM350_NORMAL_MODE);                          //
         virtual int magneticInterruptMode(enum bmm350_interrupt_enable_disable interrupt = BMM350_DISABLE_INTERRUPT);                      //
-        
+        virtual int magneticSetThreshold(int8_t threshold, enum bmm350_intr_polarity polarity);
+
 
     protected:
         // can be modified by subclassing for finer configuration
@@ -81,11 +84,13 @@ class BoschSensorClassPSoC {
         void bmm350_print_rslt(int8_t rslt);
         void panic_led_trap(const char* errhead, const char* errtext,int8_t rslt);
 
-
+        struct bmm350_mag_temp_data magnetic_threshold;
         enum bmm350_performance_parameters bmm350_performance = BMM350_REGULARPOWER;           /*! Power mode of sensor */
         enum bmm350_data_rates bmm350_data_rate               = BMM350_DATA_RATE_400HZ;        /*! Data rate value (ODR) */
         enum bmm350_power_modes bmm350_pwr_mode               = BMM350_NORMAL_MODE;            /*! Preset mode of sensor */
         enum bmm350_interrupt_enable_disable bmm350_interrupt = BMM350_DISABLE_INTERRUPT;
+        int8_t bmm350_threshold = 0;
+
 };
 
 
