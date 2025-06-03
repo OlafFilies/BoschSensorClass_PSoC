@@ -139,49 +139,129 @@ void BoschSensorClassPSoC::oneShotMode()
  */
 int8_t BoschSensorClassPSoC::configure_sensor(struct bmi2_dev *dev)
 {
-  int8_t rslt;
-  uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
+    int8_t rslt;
+    uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
+    uint8_t n_sens = 2;
 
-  struct bmi2_int_pin_config int_pin_cfg;
-  int_pin_cfg.pin_type = BMI2_INT1;
-  int_pin_cfg.int_latch = BMI2_INT_NON_LATCH;
-  int_pin_cfg.pin_cfg[0].lvl = BMI2_INT_ACTIVE_HIGH;
-  int_pin_cfg.pin_cfg[0].od = BMI2_INT_PUSH_PULL;
-  int_pin_cfg.pin_cfg[0].output_en = BMI2_INT_OUTPUT_ENABLE;
-  int_pin_cfg.pin_cfg[0].input_en = BMI2_INT_INPUT_DISABLE;
+    struct bmi2_int_pin_config int_pin_cfg;
+    int_pin_cfg.pin_type = BMI2_INT1;
+    int_pin_cfg.int_latch = BMI2_INT_NON_LATCH;
+    int_pin_cfg.pin_cfg[0].lvl = BMI2_INT_ACTIVE_HIGH;
+    int_pin_cfg.pin_cfg[0].od = BMI2_INT_PUSH_PULL;
+    int_pin_cfg.pin_cfg[0].output_en = BMI2_INT_OUTPUT_ENABLE;
+    int_pin_cfg.pin_cfg[0].input_en = BMI2_INT_INPUT_DISABLE;
 
-  struct bmi2_sens_config sens_cfg[2];
-  sens_cfg[0].type = BMI2_ACCEL;
-  sens_cfg[0].cfg.acc.bwp = BMI2_ACC_OSR2_AVG2;
-  sens_cfg[0].cfg.acc.odr = BMI2_ACC_ODR_100HZ;
-  sens_cfg[0].cfg.acc.filter_perf = BMI2_PERF_OPT_MODE;
-  sens_cfg[0].cfg.acc.range = BMI2_ACC_RANGE_4G;
-  sens_cfg[1].type = BMI2_GYRO;
-  sens_cfg[1].cfg.gyr.filter_perf = BMI2_PERF_OPT_MODE;
-  sens_cfg[1].cfg.gyr.bwp = BMI2_GYR_OSR2_MODE;
-  sens_cfg[1].cfg.gyr.odr = BMI2_GYR_ODR_100HZ;
-  sens_cfg[1].cfg.gyr.range = BMI2_GYR_RANGE_2000;
-  sens_cfg[1].cfg.gyr.ois_range = BMI2_GYR_OIS_2000;
+    struct bmi2_sens_config sens_cfg[2];
+    sens_cfg[0].type = BMI2_ACCEL;
+    sens_cfg[0].cfg.acc.bwp = BMI2_ACC_OSR2_AVG2;
+    sens_cfg[0].cfg.acc.odr = BMI2_ACC_ODR_100HZ;
+    sens_cfg[0].cfg.acc.filter_perf = BMI2_PERF_OPT_MODE;
+    sens_cfg[0].cfg.acc.range = BMI2_ACC_RANGE_4G;
 
-  rslt = bmi2_set_int_pin_config(&int_pin_cfg, dev);
-  if (rslt != BMI2_OK)
+    sens_cfg[1].type = BMI2_GYRO;
+    sens_cfg[1].cfg.gyr.filter_perf = BMI2_PERF_OPT_MODE;
+    sens_cfg[1].cfg.gyr.bwp = BMI2_GYR_OSR2_MODE;
+    sens_cfg[1].cfg.gyr.odr = BMI2_GYR_ODR_100HZ;
+    sens_cfg[1].cfg.gyr.range = BMI2_GYR_RANGE_2000;
+    sens_cfg[1].cfg.gyr.ois_range = BMI2_GYR_OIS_2000;
+
+    rslt = bmi2_set_int_pin_config(&int_pin_cfg, dev);
+    if (rslt != BMI2_OK)
+        return rslt;
+
+    rslt = bmi2_map_data_int(BMI2_DRDY_INT, (bmi2_hw_int_pin)int_pin_cfg.pin_type, dev);
+    if (rslt != BMI2_OK)
+        return rslt;
+
+    rslt = bmi2_set_sensor_config(sens_cfg, n_sens, dev);
+    if (rslt != BMI2_OK)
+        return rslt;
+
+    rslt = bmi2_sensor_enable(sens_list, n_sens, dev);
+    if (rslt != BMI2_OK)
+        return rslt;
+
     return rslt;
-
-  rslt = bmi2_map_data_int(BMI2_DRDY_INT, BMI2_INT1, dev);
-  if (rslt != BMI2_OK)
-    return rslt;
-
-  rslt = bmi2_set_sensor_config(sens_cfg, 2, dev);
-  if (rslt != BMI2_OK)
-    return rslt;
-
-  rslt = bmi2_sensor_enable(sens_list, 2, dev);
-  if (rslt != BMI2_OK)
-    return rslt;
-
-  return rslt;
 }
 
+
+/**
+ * @brief 
+ *
+ * @verbatim
+ *    sens_list                |  Values
+ * ----------------------------|-----------
+ * BMI2_ACCEL                  |  0
+ * BMI2_GYRO                   |  1
+ * BMI2_AUX                    |  2
+ * BMI2_SIG_MOTION             |  3
+ * BMI2_ANY_MOTION             |  4
+ * BMI2_NO_MOTION              |  5
+ * BMI2_STEP_DETECTOR          |  6
+ * BMI2_STEP_COUNTER           |  7
+ * BMI2_STEP_ACTIVITY          |  8
+ * BMI2_GYRO_GAIN_UPDATE       |  9
+ * BMI2_WRIST_GESTURE          |  19
+ * BMI2_WRIST_WEAR_WAKE_UP     |  20
+ * BMI2_GYRO_SELF_OFF          |  33
+ * @endverbatim
+ * 
+ * @param sens_list 
+ * @param n_sens 
+ * @param int_pin_cfg 
+ * @param sens_cfg 
+ * @return int 
+ */
+int BoschSensorClassPSoC::imu_FeatureConfig(const uint8_t *sens_list, uint8_t n_sens, bmi2_int_pin_config int_pin_cfg, bmi2_sens_config sens_cfg)
+{
+    int8_t rslt;
+
+    rslt = bmi2_set_int_pin_config(&int_pin_cfg, &bmi270);
+    if (rslt != BMI2_OK)
+        return rslt;
+
+    rslt = bmi2_map_data_int(BMI2_DRDY_INT, (bmi2_hw_int_pin)int_pin_cfg.pin_type, &bmi270);
+    if (rslt != BMI2_OK)
+        return rslt;
+
+    rslt = bmi2_set_sensor_config(&sens_cfg, n_sens, &bmi270);
+    if (rslt != BMI2_OK)
+        return rslt;
+
+    rslt = bmi2_sensor_enable(sens_list, n_sens, &bmi270);
+    if (rslt != BMI2_OK)
+        return rslt;
+
+    return rslt;
+}
+
+/**
+ * @brief 
+ * 
+ * @param rate 
+ * @return int 
+ */
+int BoschSensorClassPSoC::imu_SetDataRate(uint8_t sensor, uint8_t rate)
+{
+    int rslt;
+    struct bmi2_sens_config sens_cfg;
+    uint8_t sens_list[1] = { sensor };
+
+    sens_cfg.type = sens_list[0];
+    rslt = bmi2_get_sensor_config(&sens_cfg, 1, &bmi270);
+    if (rslt == BMI2_OK)
+    {
+        sens_cfg.cfg.acc.odr = rate;
+        rslt = bmi2_sensor_disable( sens_list, 1, &bmi270);
+        rslt = bmi2_set_sensor_config(&sens_cfg, 1, &bmi270);
+        rslt = bmi2_sensor_enable( sens_list, 1, &bmi270);
+    }
+    return rslt;
+}
+
+
+
+ 
 /**
  * @brief 
  * As this lib is for PSoC for Arduino, we do not need a setup for any other mcu
@@ -206,29 +286,45 @@ int BoschSensorClassPSoC::readAcceleration(float& x, float& y, float& z)
  * 
  * @return int 
  */
-int BoschSensorClassPSoC::accelerationAvailable() {
+int BoschSensorClassPSoC::accelerationAvailable()
+{
     uint16_t status;
     bmi2_get_int_status(&status, &bmi270);
-    int ret = ((status | _int_status) & BMI2_ACC_DRDY_INT_MASK);
+    int rslt = ((status | _int_status) & BMI2_ACC_DRDY_INT_MASK);
     _int_status = status;
     _int_status &= ~BMI2_ACC_DRDY_INT_MASK;
-    return ret;
+    return rslt;
 }
 
 /**
  * @brief 
- * 
+ * @verbatim
+ * BMI2_ACC_ODR_0_78HZ          0x01
+ * BMI2_ACC_ODR_1_56HZ          0x02
+ * BMI2_ACC_ODR_3_12HZ          0x03
+ * BMI2_ACC_ODR_6_25HZ          0x04
+ * BMI2_ACC_ODR_12_5HZ          0x05
+ * BMI2_ACC_ODR_25HZ            0x06
+ * BMI2_ACC_ODR_50HZ            0x07
+ * BMI2_ACC_ODR_100HZ           0x08
+ * BMI2_ACC_ODR_200HZ           0x09
+ * BMI2_ACC_ODR_400HZ           0x0A
+ * BMI2_ACC_ODR_800HZ           0x0B
+ * BMI2_ACC_ODR_1600HZ          0x0C
+ * @endverbatim
  * @return float 
  */
-float BoschSensorClassPSoC::accelerationSampleRate()
+float BoschSensorClassPSoC::accelerationSampleRate(uint8_t rate)
 {
+    if (rate != 0)
+    {
+        imu_SetDataRate(BMI2_ACCEL,rate);
+    }
     struct bmi2_sens_config sens_cfg;
     sens_cfg.type = BMI2_ACCEL;
     bmi2_get_sensor_config(&sens_cfg, 1, &bmi270);
     return (1 << sens_cfg.cfg.acc.odr) * 0.39;
 }
-
-
 
 /**
  * @brief 
@@ -258,25 +354,38 @@ int BoschSensorClassPSoC::gyroscopeAvailable()
 {
     uint16_t status;
     bmi2_get_int_status(&status, &bmi270);
-    int ret = ((status | _int_status) & BMI2_GYR_DRDY_INT_MASK);
+    int rslt = ((status | _int_status) & BMI2_GYR_DRDY_INT_MASK);
     _int_status = status;
     _int_status &= ~BMI2_GYR_DRDY_INT_MASK;
-    return ret;
+    return rslt;
 }
 
 /**
  * @brief 
  * 
+ * @verbatim
+ * BMI2_GYR_ODR_25HZ            0x06
+ * BMI2_GYR_ODR_50HZ            0x07
+ * BMI2_GYR_ODR_100HZ           0x08
+ * BMI2_GYR_ODR_200HZ           0x09
+ * BMI2_GYR_ODR_400HZ           0x0A
+ * BMI2_GYR_ODR_800HZ           0x0B
+ * BMI2_GYR_ODR_1600HZ          0x0C
+ * BMI2_GYR_ODR_3200HZ          0x0D
+ * @endverbatim
+ * 
  * @return float 
  */
-float BoschSensorClassPSoC::gyroscopeSampleRate()
+float BoschSensorClassPSoC::gyroscopeSampleRate(uint8_t rate)
 {
+    if (rate != 0){
+        imu_SetDataRate(BMI2_GYRO,rate);
+    }
     struct bmi2_sens_config sens_cfg;
     sens_cfg.type = BMI2_GYRO;
     bmi2_get_sensor_config(&sens_cfg, 1, &bmi270);
     return (1 << sens_cfg.cfg.gyr.odr) * 0.39;
 }
-
 
 
 

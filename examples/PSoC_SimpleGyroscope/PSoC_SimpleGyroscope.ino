@@ -29,7 +29,7 @@ void setup() {
     while (1);
   }
   Serial.print("Gyroscope sample rate = ");
-  Serial.print(IMU_PSoC.gyroscopeSampleRate());
+  Serial.print(IMU_PSoC.gyroscopeSampleRate(BMI2_GYR_ODR_100HZ));
   Serial.println(" Hz");
   Serial.println();
   Serial.println("Gyroscope in degrees/second");

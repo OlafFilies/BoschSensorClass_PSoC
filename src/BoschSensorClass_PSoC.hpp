@@ -48,15 +48,20 @@ class BoschSensorClassPSoC {
         void setContinuousMode();
         void oneShotMode();
 
+        // IMU Features
+        virtual int imu_FeatureConfig(const uint8_t *sens_list, uint8_t n_sens, bmi2_int_pin_config int_pin_cfg, bmi2_sens_config sens_cfg);
+        virtual int imu_SetDataRate(uint8_t sensor, uint8_t rate);
+
+
         // Accelerometer
         virtual int readAcceleration(float& x, float& y, float& z); // Results are in G (earth gravity).
         virtual int accelerationAvailable(); // Number of samples in the FIFO.
-        virtual float accelerationSampleRate(); // Sampling rate of the sensor.
+        virtual float accelerationSampleRate(uint8_t rate = 0); // Sampling rate of the sensor.
 
         // Gyroscope
         virtual int readGyroscope(float& x, float& y, float& z); // Results are in degrees/second.
         virtual int gyroscopeAvailable(); // Number of samples in the FIFO.
-        virtual float gyroscopeSampleRate(); // Sampling rate of the sensor.
+        virtual float gyroscopeSampleRate(uint8_t rate = 0);
 
         // Magnetometer
         virtual int readMagneticField(float& x, float& y, float& z);
@@ -93,6 +98,11 @@ class BoschSensorClassPSoC {
         void bmm350_print_rslt(int8_t rslt);
         void panic_led_trap(const char* errhead, const char* errtext,int8_t rslt);
 
+        uint8_t bmi270_gyr_odr                                = BMI2_GYR_ODR_100HZ;
+        uint8_t bmi270_acc_odr                                = BMI2_ACC_ODR_100HZ;
+        uint8_t bmi270_aux_odr                                = BMI2_AUX_ODR_100HZ;
+
+       
         struct bmm350_mag_temp_data magnetic_threshold;
         enum bmm350_performance_parameters bmm350_performance = BMM350_REGULARPOWER;           /*! Power mode of sensor */
         enum bmm350_data_rates bmm350_data_rate               = BMM350_DATA_RATE_400HZ;        /*! Data rate value (ODR) */
