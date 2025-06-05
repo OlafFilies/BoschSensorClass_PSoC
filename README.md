@@ -6,15 +6,15 @@ which includes the following sensors
 - the Bosch Sensortec BMM250 magnetometer 
 Both sensors are attached to the internal I2C bus of the PSoC Kit, therefore:
 
-| Board               | sensor    | pin    | purpose    |
-|:--------------------|:----------|:-------|:-----------|
-| CY8CKIT-062S2-AI    | BMI270    | P0_2   | I2C SCL    |
-|                     |           | P0_3   | I2C SDA    |
-|                     |           | P1_5   | INT1       |
-|                     |           | P0_4   | INT2       |
-|                     | BMM350    | P0_2   | I2C SCL    |
-|                     |           | P0_3   | I2C SDA    |
-|                     |           | P1_0   | INT        |
+| Board               | sensor    | pin    | arduino pin   | purpose    |
+|:--------------------|:----------|:-------|:--------------|:-----------|
+| CY8CKIT-062S2-AI    | BMI270    | P0_2   |      8        | I2C SCL    |
+|                     |           | P0_3   |      9        | I2C SDA    |
+|                     |           | P1_5   |      33       | INT1       |
+|                     |           | P0_4   |      34       | INT2       |
+|                     | BMM350    | P0_2   |      8        | I2C SCL    |
+|                     |           | P0_3   |      9        | I2C SDA    |
+|                     |           | P1_0   |      35       | INT        |
 
 
 

@@ -98,7 +98,6 @@ int BoschSensorClassPSoC::begin(CfgBoshSensor_t cfg)
         bmm350_print_rslt(result);
     }
 
-    result = 0;
     _initialized = (result == 0);
 
     return _initialized;
@@ -394,7 +393,7 @@ float BoschSensorClassPSoC::gyroscopeSampleRate(uint8_t rate)
 
 /**
  * ****************************************************************************
- * @brief Setup for the magnetic sensor BMM359
+ * @brief Setup for the magnetic sensor BMM350
  * ****************************************************************************
  */
 
@@ -566,7 +565,7 @@ int BoschSensorClassPSoC::magneticSetThreshold(int8_t threshold, enum bmm350_int
     rslt = bmm350_configure_interrupt(BMM350_PULSED, polarity, BMM350_INTR_PUSH_PULL, BMM350_MAP_TO_PIN, &bmm350);
     if (rslt == BMM350_OK)
     {
-        rslt = bmm350_enable_interrupt(BMM350_ENABLE_INTERRUPT, &bmm350);
+        rslt = magneticInterruptMode(BMM350_ENABLE_INTERRUPT);
     }
     return rslt;
 }
@@ -587,7 +586,7 @@ bmm350_threshold_data_t BoschSensorClassPSoC::magneticGetThreshold() {
     bmm350_threshold_tmp.m_y = 0;
     bmm350_threshold_tmp.m_z = 0;
 
-    bmm350_get_interrupt_status(&drdyStatus, &bmm350);
+    rslt = bmm350_get_interrupt_status(&drdyStatus, &bmm350);
     if (drdyStatus & 0x01)
     {
         rslt = readMagneticField(x,y,z);
@@ -598,7 +597,7 @@ bmm350_threshold_data_t BoschSensorClassPSoC::magneticGetThreshold() {
                 bmm350_threshold_tmp.m_x = (int32_t)x;
             } else if ((int32_t)x > (int32_t)bmm350_threshold*16)
             {
-                bmm350_threshold_tmp.i_x = -1;
+                bmm350_threshold_tmp.i_x = 1;
                 bmm350_threshold_tmp.m_x = (int32_t)x;
             }
 
@@ -607,7 +606,7 @@ bmm350_threshold_data_t BoschSensorClassPSoC::magneticGetThreshold() {
                 bmm350_threshold_tmp.m_y = (int32_t)y;
             } else if ((int32_t)y > (int32_t)bmm350_threshold*16)
             {
-                bmm350_threshold_tmp.i_y = -1;
+                bmm350_threshold_tmp.i_y = 1;
                 bmm350_threshold_tmp.m_y = (int32_t)y;
             }
 
@@ -616,7 +615,7 @@ bmm350_threshold_data_t BoschSensorClassPSoC::magneticGetThreshold() {
                 bmm350_threshold_tmp.m_z = (int32_t)z;
             } else if ((int32_t)z > (int32_t)bmm350_threshold*16)
             {
-                bmm350_threshold_tmp.i_z = -1;
+                bmm350_threshold_tmp.i_z = 1;
                 bmm350_threshold_tmp.m_z = (int32_t)z;
             }
         }

@@ -13,6 +13,7 @@
 
 
 volatile uint8_t interruptFlag = 0;
+
 void BMM350_Interrupt(){
     interruptFlag = 1;
     detachInterrupt(0);
@@ -22,6 +23,12 @@ void setup() {
     Serial.begin(115200);
     while (!Serial);
     Serial.println("Started");
+
+    // To configure the BMM3500
+    if (!IMU_PSoC.begin(BOSCH_MAGNETOMETER_ONLY)) {
+        Serial.println("Failed to initialize IMU_PSoC!");
+        while (1);
+    }
 
     /** the sample rate can be set to
      * 400Hz                  |  BMM350_DATA_RATE_400HZ (default)
@@ -39,7 +46,11 @@ void setup() {
      * even lesser noise          |  BMM350_AVERAGING_4   BMM350_LOWNOISE
      * lowest noise/highest power |  BMM350_AVERAGING_8   BMM350_ULTRALOWNOISE
      */
-    IMU_PSoC.magneticSensorPreset(BMM350_DATA_RATE_25HZ, BMM350_ULTRALOWNOISE);
+    if (IMU_PSoC.magneticSensorPreset(BMM350_DATA_RATE_50HZ, BMM350_ULTRALOWNOISE) != BMM350_OK )
+    {
+        Serial.println("Failed to set data rate and nois level!");
+        while (1);
+    }
 
     /**
      *                powermode |   Power mode
@@ -49,7 +60,11 @@ void setup() {
      *                          |  BMM350_FORCED_MODE
      *                          |  BMM350_FORCED_MODE_FAST
      */
-    IMU_PSoC.magneticPowerMode(BMM350_NORMAL_MODE);
+    if (IMU_PSoC.magneticPowerMode(BMM350_NORMAL_MODE) != BMM350_OK )
+    {
+        Serial.println("Failed to set power mode!");
+        while (1);
+    }
 
     /**
      * Set threshold interrupt, an interrupt is triggered when the geomagnetic value of a channel is beyond/below the threshold
@@ -60,56 +75,65 @@ void setup() {
      *   BMM350_ACTIVE_HIGH
      *   BMM350_ACTIVE_LOW
      */
-    IMU_PSoC.magneticSetThreshold(0,BMM350_ACTIVE_LOW);
-    pinMode(P1_0 ,INPUT_PULLUP);
-    attachInterrupt(0, BMM350_Interrupt, LOW);
-
-    // To configure the BMM3500
-    if (!IMU_PSoC.begin(BOSCH_MAGNETOMETER_ONLY)) {
-        Serial.println("Failed to initialize IMU_PSoC!");
+    if (IMU_PSoC.magneticSetThreshold(-10,BMM350_ACTIVE_LOW) != BMM350_OK )
+    {
+        Serial.println("Failed to set interrupt!");
         while (1);
     }
+
+    pinMode(35 ,INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(35), BMM350_Interrupt, LOW);
 
     Serial.println("Interrupt on threshold started");
 }
 
 void loop() {
-    if(interruptFlag == 1){
+
+        // if(interruptFlag == 1){
+        // Without interruptFlag we only test the DRDY register if new data is available
         bmm350_threshold_data_t thresholdData = IMU_PSoC.magneticGetThreshold();
 
-        if(thresholdData.m_x != 0){
-            Serial.print("Threshold x = ");
+        Serial.print("Threshold x = ");
+        if(thresholdData.i_x != 0){
             Serial.print(thresholdData.m_x);
-            Serial.print("µT on Interrupt ");
+            Serial.print(" µT on Interrupt\t");
             if (thresholdData.m_x < 0)
                 Serial.println("LOW");
             if (thresholdData.m_x > 0)
                 Serial.println("HIGH");
+        }else{
+            Serial.println("none");
         }
-        if(thresholdData.m_y != 0){
-            Serial.print("Threshold y = ");
+
+        Serial.print("Threshold y = ");
+        if(thresholdData.i_y != 0){
             Serial.print(thresholdData.m_y);
-            Serial.print("µT on Interrupt "); 
+            Serial.print(" µT on Interrupt\t"); 
             if (thresholdData.m_y < 0)
                 Serial.println("LOW");
             if (thresholdData.m_y > 0)
                 Serial.println("HIGH");
+        }else{
+            Serial.println("none");
         }
-        if(thresholdData.m_z != 0){
-            Serial.print("Threshold z = ");
+
+        Serial.print("Threshold z = ");
+        if(thresholdData.i_z != 0){
             Serial.print(thresholdData.m_z);
-            Serial.print("µT on Interrupt "); 
+            Serial.print(" µT on Interrupt\t"); 
             if (thresholdData.m_z < 0)
                 Serial.println("LOW");
             if (thresholdData.m_z > 0)
                 Serial.println("HIGH");
+        }else{
+            Serial.println("none");
         }
         Serial.println();
 
         interruptFlag = 0;
-        attachInterrupt(0, BMM350_Interrupt, LOW);
+        // attachInterrupt(digitalPinToInterrupt(35), BMM350_Interrupt, LOW);
 
-    }
+    // }
     delay(1000);
 
 }
