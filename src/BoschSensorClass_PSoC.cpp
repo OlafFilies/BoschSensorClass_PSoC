@@ -6,9 +6,6 @@
  *
  */
 
-
-#include "Arduino.h"
-#include "Wire.h"
 #include "BoschSensorClass_PSoC.hpp"
 
 
@@ -42,7 +39,7 @@ BoschSensorClassPSoC::BoschSensorClassPSoC(TwoWire& wire)
  * @verbatim
       cfg                   |
  ---------------------------|-----------------------------------------
-   BOSCH_ACCELEROMETER_ONLY | only the BMI270 accelerometer/girometer 
+   BOSCH_ACCELEROMETER_ONLY | only the BMI270 accelerometer/gyroscope
    BOSCH_MAGNETOMETER_ONLY  | only the BMM350 magnetometer
    BOSCH_ACCEL_AND_MAGN     | BMI270 and BMM350
  * @endverbatim
@@ -739,7 +736,7 @@ void BoschSensorClassPSoC::delay_us(uint32_t period, void *intf_ptr)
 }
 
 /**
- * @brief Function blinks the LED_BULTIN in panic mode and print outs the error code
+ * @brief Function blinks the LED_BUILTIN in panic mode and print outs the error code
  * and description
  * 
  * @param errhead Error header string

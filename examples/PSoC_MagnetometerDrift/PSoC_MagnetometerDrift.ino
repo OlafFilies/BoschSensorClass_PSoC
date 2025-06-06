@@ -10,7 +10,6 @@
  */
 
 
-
 #include "BoschSensorClass_PSoC.hpp"
 
 // Switch to 1 if you also want to collect the sensor temperature
@@ -48,7 +47,7 @@ void setup()
      */
     if (IMU_PSoC.magneticSensorPreset(BMM350_DATA_RATE_12_5HZ, BMM350_AVERAGING_8) != BMM350_OK )
     {
-        Serial.println("Failed to set data rate and nois level!");
+        Serial.println("Failed to set data rate and noise level!");
         while (1);
     }
 
@@ -66,14 +65,32 @@ void setup()
         while (1);
     }
 
-    drift = IMU_PSoC.readMagneticData();
 
-    Serial.println(drift.x);
-    Serial.println(drift.y);
-    Serial.println(drift.z);
+    float x, y, z, t;
+    for (int i = 0; i < 10; i++)
+    {
+        IMU_PSoC.readMagneticField(x, y, z, t);
+        drift.x += x;
+        drift.y += y;
+        drift.z += z;
+        drift.temperature += t;
+        delay(100);
+    }
+    drift.x /= 10.0f;
+    drift.y /= 10.0f;
+    drift.z /= 10.0f;
+    drift.temperature /= 10.0f;
+
+    Serial.println("Drift values:");
+    Serial.println("X\tY\tZ\tTemperature");
+    Serial.println("µT\tµT\tµT\t°C");
+       
+    Serial.print(drift.x);  Serial.print('\t');
+    Serial.print(drift.y);  Serial.print('\t');
+    Serial.print(drift.z);  Serial.print('\t');
     Serial.println(drift.temperature);
 
-
+    delay(1000);
     Serial.println("Interrupt on threshold started");
 }
 
@@ -84,18 +101,27 @@ void loop()
 
     IMU_PSoC.readMagneticField(x, y, z, t);
 
-    Serial.print(drift.x - x);
-    Serial.print('\t');
-    Serial.print(drift.y - y);
-    Serial.print('\t');
+    Serial.print(drift.x - x);  Serial.print('\t');
+    Serial.print(drift.y - y);  Serial.print('\t');
     Serial.print(drift.z - z);
+
+    drift.x += x;
+    drift.y += y;
+    drift.z += z;
+
+    drift.x /= 2.0f;
+    drift.y /= 2.0f;
+    drift.z /= 2.0f;
+
     if (WITH_TEMPERATURE)
     {
-      Serial.print('\t');
-      Serial.print(drift.temperature - t);
+        Serial.print('\t');
+        Serial.print(drift.temperature - t);
+        drift.temperature += t;
+        drift.temperature /= 2.0f;
     }
     Serial.println("");
 
-    delay(1000);
+    delay(100);
 
 }

@@ -26,7 +26,6 @@ void setup() {
         while (1);
     }
 
-
     /** the sample rate can be set to
      * 400Hz                  |  BMM350_DATA_RATE_400HZ (default)
      * 200Hz                  |  BMM350_DATA_RATE_200HZ
@@ -73,7 +72,6 @@ void setup() {
     }
 
     Serial.println("Everything set, we can start");
-
 
     Serial.println();
     Serial.println("Magnetic Field in uT");

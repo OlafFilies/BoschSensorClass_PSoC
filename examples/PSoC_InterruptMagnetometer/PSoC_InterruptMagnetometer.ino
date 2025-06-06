@@ -1,6 +1,6 @@
 /**
  * @file PSoC_InterruptMagnetometer.ino
- * @author your name (you@domain.com)
+ * @author Dr. Olaf Filies
  * @brief 
  * @version 0.1
  * @date 2025-06-02
@@ -75,7 +75,7 @@ void setup() {
      *   BMM350_ACTIVE_HIGH
      *   BMM350_ACTIVE_LOW
      */
-    if (IMU_PSoC.magneticSetThreshold(-10,BMM350_ACTIVE_LOW) != BMM350_OK )
+    if (IMU_PSoC.magneticSetThreshold(10,BMM350_ACTIVE_LOW) != BMM350_OK )
     {
         Serial.println("Failed to set interrupt!");
         while (1);
@@ -90,44 +90,43 @@ void setup() {
 void loop() {
 
     if(interruptFlag == 1){
-    // Without interruptFlag we only test the DRDY register if new data is available
         bmm350_threshold_data_t thresholdData = IMU_PSoC.magneticGetThreshold();
 
-        // Serial.print("Threshold x = ");
-        // if(thresholdData.i_x != 0){
-        //     Serial.print(thresholdData.m_x);
-        //     Serial.print(" µT on Interrupt\t");
-        //     if (thresholdData.m_x < 0)
-        //         Serial.println("LOW");
-        //     if (thresholdData.m_x > 0)
-        //         Serial.println("HIGH");
-        // }else{
-        //     Serial.println("none");
-        // }
+        Serial.print("Threshold x = ");
+        if(thresholdData.i_x != 0){
+            Serial.print(thresholdData.m_x);
+            Serial.print(" µT on Interrupt\t");
+            if (thresholdData.m_x < 0)
+                Serial.println("LOW");
+            if (thresholdData.m_x > 0)
+                Serial.println("HIGH");
+        }else{
+            Serial.println("none");
+        }
 
-        // Serial.print("Threshold y = ");
-        // if(thresholdData.i_y != 0){
-        //     Serial.print(thresholdData.m_y);
-        //     Serial.print(" µT on Interrupt\t"); 
-        //     if (thresholdData.m_y < 0)
-        //         Serial.println("LOW");
-        //     if (thresholdData.m_y > 0)
-        //         Serial.println("HIGH");
-        // }else{And 
-        //     Serial.println("none");
-        // }
+        Serial.print("Threshold y = ");
+        if(thresholdData.i_y != 0){
+            Serial.print(thresholdData.m_y);
+            Serial.print(" µT on Interrupt\t"); 
+            if (thresholdData.m_y < 0)
+                Serial.println("LOW");
+            if (thresholdData.m_y > 0)
+                Serial.println("HIGH");
+        }else{
+            Serial.println("none");
+        }
 
-        // Serial.print("Threshold z = ");
-        // if(thresholdData.i_z != 0){
-        //     Serial.print(thresholdData.m_z);
-        //     Serial.print(" µT on Interrupt\t"); 
-        //     if (thresholdData.m_z < 0)
-        //         Serial.println("LOW");
-        //     if (thresholdData.m_z > 0)
-        //         Serial.println("HIGH");
-        // }else{
-        //     Serial.println("none");
-        // }
+        Serial.print("Threshold z = ");
+        if(thresholdData.i_z != 0){
+            Serial.print(thresholdData.m_z);
+            Serial.print(" µT on Interrupt\t"); 
+            if (thresholdData.m_z < 0)
+                Serial.println("LOW");
+            if (thresholdData.m_z > 0)
+                Serial.println("HIGH");
+        }else{
+            Serial.println("none");
+        }
         Serial.println();
 
         interruptFlag = 0;
