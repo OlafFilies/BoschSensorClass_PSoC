@@ -604,32 +604,45 @@ bmm350_threshold_data_t BoschSensorClassPSoC::magneticGetThreshold() {
         rslt = readMagneticField(x,y,z);
         if (rslt == BMM350_OK)
         {
-            if ( (int32_t)x < (int32_t)bmm350_threshold*16 ){
-                bmm350_threshold_tmp.i_x = -1;
-                bmm350_threshold_tmp.m_x = (int32_t)x;
-            } else if ((int32_t)x > (int32_t)bmm350_threshold*16)
+            if ( abs((int32_t)x) > abs((int32_t)bmm350_threshold*16) && bmm350_threshold > 0 )
             {
                 bmm350_threshold_tmp.i_x = 1;
                 bmm350_threshold_tmp.m_x = (int32_t)x;
+            }else if ( abs((int32_t)x) < abs((int32_t)bmm350_threshold*16) && bmm350_threshold < 0 )
+            {
+                bmm350_threshold_tmp.i_x = -1;
+                bmm350_threshold_tmp.m_x = (int32_t)x;
+            }else{
+                bmm350_threshold_tmp.i_x = 0;
+                bmm350_threshold_tmp.m_x = 0;
             }
 
-            if ( (int32_t)y < (int32_t)bmm350_threshold*16 ){
-                bmm350_threshold_tmp.i_y = -1;
-                bmm350_threshold_tmp.m_y = (int32_t)y;
-            } else if ((int32_t)y > (int32_t)bmm350_threshold*16)
+            if ( abs((int32_t)y) > abs((int32_t)bmm350_threshold*16) && bmm350_threshold > 0 )
             {
                 bmm350_threshold_tmp.i_y = 1;
                 bmm350_threshold_tmp.m_y = (int32_t)y;
+            }else if ( abs((int32_t)y) < abs((int32_t)bmm350_threshold*16) && bmm350_threshold < 0 )
+            {
+                bmm350_threshold_tmp.i_y = -1;
+                bmm350_threshold_tmp.m_y = (int32_t)y;
+            }else{
+                bmm350_threshold_tmp.i_y = 0;
+                bmm350_threshold_tmp.m_y = 0;
             }
 
-            if ( (int32_t)z < (int32_t)bmm350_threshold*16 ){
-                bmm350_threshold_tmp.i_z = -1;
-                bmm350_threshold_tmp.m_z = (int32_t)z;
-            } else if ((int32_t)z > (int32_t)bmm350_threshold*16)
+            if ( abs((int32_t)z) > abs((int32_t)bmm350_threshold*16) && bmm350_threshold > 0 )
             {
                 bmm350_threshold_tmp.i_z = 1;
                 bmm350_threshold_tmp.m_z = (int32_t)z;
+            }else if ( abs((int32_t)z) < abs((int32_t)bmm350_threshold*16) && bmm350_threshold < 0 )
+            {
+                bmm350_threshold_tmp.i_z = -1;
+                bmm350_threshold_tmp.m_z = (int32_t)z;
+            }else{
+                bmm350_threshold_tmp.i_z = 0;
+                bmm350_threshold_tmp.m_z = 0;
             }
+
         }
     }
     return bmm350_threshold_tmp;
