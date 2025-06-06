@@ -89,8 +89,8 @@ void setup() {
 
 void loop() {
 
-        // if(interruptFlag == 1){
-        // Without interruptFlag we only test the DRDY register if new data is available
+    if(interruptFlag == 1){
+    // Without interruptFlag we only test the DRDY register if new data is available
         bmm350_threshold_data_t thresholdData = IMU_PSoC.magneticGetThreshold();
 
         Serial.print("Threshold x = ");
@@ -131,9 +131,9 @@ void loop() {
         Serial.println();
 
         interruptFlag = 0;
-        // attachInterrupt(digitalPinToInterrupt(35), BMM350_Interrupt, LOW);
+        attachInterrupt(digitalPinToInterrupt(35), BMM350_Interrupt, LOW);
 
-    // }
+    }
     delay(1000);
 
 }

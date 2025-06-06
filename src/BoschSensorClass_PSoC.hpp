@@ -66,6 +66,7 @@ class BoschSensorClassPSoC {
         // Magnetometer
         virtual int readMagneticField(float& x, float& y, float& z);
         virtual int readMagneticField(float& x, float& y, float& z, float& t);
+        virtual bmm350_mag_temp_data readMagneticData(void);
         virtual int readCompass(float& compass);
 
         virtual int magneticSensorPreset(enum bmm350_data_rates rate = BMM350_DATA_RATE_400HZ, enum bmm350_performance_parameters performance = BMM350_REGULARPOWER);

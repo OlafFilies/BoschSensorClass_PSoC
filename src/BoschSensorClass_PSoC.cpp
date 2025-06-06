@@ -453,6 +453,18 @@ int BoschSensorClassPSoC::readMagneticField(float& x, float& y, float& z, float&
 }
 
 /**
+ * @brief This function returns a structure instead of single values
+ * 
+ * @return bmm350_mag_temp_data 
+ */
+bmm350_mag_temp_data BoschSensorClassPSoC::readMagneticData(void)
+{
+    struct bmm350_mag_temp_data mag_data;
+    bmm350_get_compensated_mag_xyz_temp_data(&mag_data, &bmm350);
+    return mag_data;
+}
+
+/**
  * @brief Calculates the magnetic field in compass degrees
  * 
  * @param compass compass degree based on x and y numbers
